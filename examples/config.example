@@ -1,0 +1,40 @@
+# system-janitor configuration
+#
+# Sourced as bash. Use shell expansions and comments freely.
+# Copy to ~/.config/system-janitor/config and edit.
+
+# ── Workspace dirs ────────────────────────────────────────────────────
+# Colon-separated list of directories scanned for .NET build artifacts
+# (bin/ and obj/). The script walks up to 6 levels deep.
+#
+# JANITOR_WORKSPACE_DIRS="$HOME/code:$HOME/projects"
+
+# ── Extra cleanup dirs ────────────────────────────────────────────────
+# Colon-separated list of directories to remove entirely on every run.
+# Useful for caches that aren't covered by the built-in sections.
+#
+# Examples (uncomment selectively):
+#
+#   JANITOR_EXTRA_CLEANUP_DIRS="$HOME/.cache/some-tool:$HOME/.cache/playwright-old"
+
+# ── Safety-floor dirs ─────────────────────────────────────────────────
+# Colon-separated list of directories whose inode AND total byte size
+# must NOT change during the run. If any does, the run exits with code 2
+# and logs user.err to syslog.
+#
+# Use this for paths the cleanup must NEVER touch (active session
+# directories, important caches you don't trust to be left alone, etc.).
+#
+# JANITOR_SAFETY_FLOOR_DIRS="$HOME/.config/important-tool"
+
+# ── Section toggles (defaults: yes if tooling is present) ─────────────
+# JANITOR_DOCKER_PRUNE=yes
+# JANITOR_DOCKER_VOLUMES=yes        # pass --volumes to docker system prune
+# JANITOR_GO_CLEAN=yes
+# JANITOR_TMP_GOBUILD_ORPHANS=yes
+# JANITOR_NUGET_CLEAN=yes
+
+# ── Log location ──────────────────────────────────────────────────────
+# Default: $XDG_STATE_HOME/janitor (~/.local/state/janitor)
+#
+# JANITOR_LOG_DIR="$HOME/.local/state/janitor"
