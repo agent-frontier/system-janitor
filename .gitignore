@@ -1,0 +1,11 @@
+# Defensive: runtime state should already live under XDG paths
+# (~/.local/state/janitor/), but if anyone ever runs the script with
+# a working directory inside this repo, keep generated files out.
+*.log
+*.log.[0-9]*
+*.jsonl
+*.jsonl.[0-9]*
+*.lock
+last-run.json
+janitor-state/
+state/
