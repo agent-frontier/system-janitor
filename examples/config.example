@@ -1,17 +1,42 @@
 # system-janitor configuration
 #
-# Sourced as bash. Use shell expansions and comments freely.
-# Copy to ~/.config/system-janitor/config and edit.
+# Format:        key=value (shell-sourced; bash semantics, comments with #).
+# Default path:  $XDG_CONFIG_HOME/system-janitor/config
+#                (typically ~/.config/system-janitor/config). Override via
+#                --config <path>.
+#
+# All knobs here are JANITOR_* environment variables. The script applies
+# the defaults shown below if a variable is unset.
+#
+# Section gating (KNOWN_SECTIONS = docker_prune, go_build_cache,
+# tmp_gobuild_orphans, workspace_binobj, extra_cleanup, nuget_http_temp):
+#
+#   default-ON (run if their tooling is present):
+#     docker_prune          gated by JANITOR_DOCKER_PRUNE=yes
+#     go_build_cache        gated by JANITOR_GO_CLEAN=yes
+#     tmp_gobuild_orphans   gated by JANITOR_TMP_GOBUILD_ORPHANS=yes
+#     nuget_http_temp       gated by JANITOR_NUGET_CLEAN=yes
+#
+#   opt-IN (only run when a directory list is configured):
+#     workspace_binobj      enabled by setting JANITOR_WORKSPACE_DIRS
+#     extra_cleanup         enabled by setting JANITOR_EXTRA_CLEANUP_DIRS
+#
+# To run a subset of sections ad-hoc, prefer the --only <list> CLI flag
+# over disabling every other JANITOR_*=no toggle individually. See the
+# "Configuration reference" section of README.md for the full knob list
+# and semantics.
 
 # ── Workspace dirs ────────────────────────────────────────────────────
 # Colon-separated list of directories scanned for .NET build artifacts
-# (bin/ and obj/). The script walks up to 6 levels deep.
+# (bin/ and obj/). The script walks up to 6 levels deep. Setting this
+# value is what opts the workspace_binobj section in.
 #
 # JANITOR_WORKSPACE_DIRS="$HOME/code:$HOME/projects"
 
 # ── Extra cleanup dirs ────────────────────────────────────────────────
 # Colon-separated list of directories to remove entirely on every run.
 # Useful for caches that aren't covered by the built-in sections.
+# Setting this value is what opts the extra_cleanup section in.
 #
 # Examples (uncomment selectively):
 #
@@ -30,9 +55,16 @@
 # ── Section toggles (defaults: yes if tooling is present) ─────────────
 # JANITOR_DOCKER_PRUNE=yes
 # JANITOR_DOCKER_VOLUMES=yes        # pass --volumes to docker system prune
-# JANITOR_GO_CLEAN=yes
+# JANITOR_GO_CLEAN=yes              # gates the go_build_cache section
 # JANITOR_TMP_GOBUILD_ORPHANS=yes
-# JANITOR_NUGET_CLEAN=yes
+# JANITOR_NUGET_CLEAN=yes           # gates the nuget_http_temp section
+
+# ── Dry-run default ───────────────────────────────────────────────────
+# When set to 1, every run behaves as if --dry-run were passed (no
+# destructive ops; events still logged with status=dry_run). The
+# --dry-run / -n CLI flag overrides this on a per-invocation basis.
+#
+# JANITOR_DRY_RUN=0
 
 # ── Log location ──────────────────────────────────────────────────────
 # Default: $XDG_STATE_HOME/janitor (~/.local/state/janitor)

@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/agent-frontier/system-janitor/schemas/report.schema.json",
+  "title": "system-janitor --report --json output",
+  "description": "Schema for the single JSON object emitted by `system-janitor.sh --report --json`. This is a frozen public contract consumed by autonomous agents. additionalProperties is true so new fields can land without breaking old validations; renaming or removing the documented fields is a breaking change.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "log_dir",
+    "jsonl_path",
+    "generated_at",
+    "total_events",
+    "total_runs",
+    "real_runs",
+    "dry_runs",
+    "date_range",
+    "total_freed_kb",
+    "total_freed_bytes",
+    "per_section",
+    "obsolete_sections",
+    "most_recent_run",
+    "data_quality",
+    "idle_streaks"
+  ],
+  "properties": {
+    "log_dir": { "type": "string" },
+    "jsonl_path": { "type": "string" },
+    "generated_at": { "type": "string" },
+    "total_events": { "type": "integer", "minimum": 0 },
+    "total_runs": { "type": "integer", "minimum": 0 },
+    "real_runs": { "type": "integer", "minimum": 0 },
+    "dry_runs": { "type": "integer", "minimum": 0 },
+    "date_range": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["first", "last"],
+      "properties": {
+        "first": { "type": ["string", "null"] },
+        "last": { "type": ["string", "null"] }
+      }
+    },
+    "total_freed_kb": { "type": "integer" },
+    "total_freed_bytes": { "type": "integer", "minimum": 0 },
+    "per_section": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sectionSummary" }
+    },
+    "obsolete_sections": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          { "$ref": "#/$defs/sectionSummary" },
+          {
+            "type": "object",
+            "required": ["first_seen", "last_seen"],
+            "properties": {
+              "first_seen": { "type": ["string", "null"] },
+              "last_seen": { "type": ["string", "null"] }
+            }
+          }
+        ]
+      }
+    },
+    "most_recent_run": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": ["run_id", "finished", "freed_kb", "freed_bytes", "safety_integrity", "dry_run"],
+          "properties": {
+            "run_id": { "type": "string" },
+            "finished": { "type": "string" },
+            "freed_kb": { "type": "integer" },
+            "freed_bytes": { "type": "integer", "minimum": 0 },
+            "safety_integrity": {
+              "type": "string",
+              "enum": ["ok", "warn", "dry_run", "idle", "violated_missing", "violated_inode_changed"]
+            },
+            "dry_run": { "type": "integer", "enum": [0, 1] }
+          }
+        }
+      ]
+    },
+    "data_quality": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["invalid_lines", "examples"],
+      "properties": {
+        "invalid_lines": { "type": "integer", "minimum": 0 },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": true,
+            "required": ["line", "error"],
+            "properties": {
+              "line": { "type": "integer" },
+              "error": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "idle_streaks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["section", "consecutive_idle_runs", "last_productive_run"],
+        "properties": {
+          "section": { "type": "string" },
+          "consecutive_idle_runs": { "type": "integer", "minimum": 0 },
+          "last_productive_run": {
+            "oneOf": [
+              { "type": "null" },
+              {
+                "type": "object",
+                "additionalProperties": true,
+                "required": ["run_id", "ts"],
+                "properties": {
+                  "run_id": { "type": "string" },
+                  "ts": { "type": "string" }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sectionSummary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "runs", "freed_kb_total", "freed_bytes", "items_total", "status_counts"],
+      "properties": {
+        "name": { "type": "string" },
+        "runs": { "type": "integer", "minimum": 0 },
+        "freed_kb_total": { "type": "integer" },
+        "freed_bytes": { "type": "integer", "minimum": 0 },
+        "items_total": { "type": "integer", "minimum": 0 },
+        "status_counts": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 0 },
+          "properties": {
+            "ok": { "type": "integer", "minimum": 0 },
+            "warn": { "type": "integer", "minimum": 0 },
+            "dry_run": { "type": "integer", "minimum": 0 },
+            "idle": { "type": "integer", "minimum": 0 },
+            "violated_missing": { "type": "integer", "minimum": 0 },
+            "violated_inode_changed": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    }
+  }
+}

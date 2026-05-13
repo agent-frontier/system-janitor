@@ -2,156 +2,85 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-Disk-cleanup sweep with audit-grade logging for long-lived development
-hosts. Runs unattended via cron. Designed for hosts where Docker, Go,
-.NET, and other toolchains accumulate gigabytes of regenerable build
-artifacts week over week.
+Disk-cleanup sweep with audit-grade logging for long-lived development hosts.
 
-## Why
+Build caches and container layers grow without bound. Most cleanup scripts are
+either too aggressive (wipe things you needed) or too narrow (only clean one
+toolchain). `system-janitor` runs the universally-safe operations by default
+(Docker, Go, NuGet http/temp caches, `/tmp/go-build*` orphans) and gates
+everything that touches user paths behind explicit configuration. It is
+designed to run unattended via cron on hosts where Docker, Go, .NET, and
+other toolchains accumulate gigabytes of regenerable build artifacts week
+over week.
 
-Build caches and container layers grow without bound. Most cleanup
-scripts are either too aggressive (wipe things you needed) or too
-narrow (only clean one toolchain). `system-janitor` runs the
-universally-safe operations by default and gates everything that
-touches user paths behind explicit configuration.
+Safety is the headline feature: a `flock` single-instance lock, an optional
+inode+byte safety-floor integrity check over directories you nominate,
+atomic-rename writes to `last-run.json`, and a first-class `--dry-run` mode.
+See [docs/safety.md](docs/safety.md) for the full list of guarantees.
 
-## Defaults (no config required)
+The primary consumer is an autonomous LLM agent. Every machine-mode output
+is stable JSON with a documented schema and a frozen exit-code contract;
+`--version --json` exposes a `capabilities[]` feature-detection surface so
+agents can negotiate features without parsing `--help`. Humans run it from
+cron; agents drive it as a tool.
 
-These sections run automatically when the relevant tooling is present.
-None of them touch user-owned project files.
-
-| Section | What it does |
-|---|---|
-| `docker_prune` | `docker system prune -af --volumes` — removes only resources not in use |
-| `go_build_cache` | `go clean -cache -testcache` |
-| `tmp_gobuild_orphans` | Removes `/tmp/go-build*` and `/tmp/gopath` |
-| `nuget_http_temp` | `dotnet nuget locals http-cache --clear` and `temp --clear` (preserves `global-packages`) |
-
-## Opt-in (configure as needed)
-
-These sections do nothing until you set their config knobs.
-
-| Section | Config |
-|---|---|
-| `workspace_binobj` | `JANITOR_WORKSPACE_DIRS` — colon-separated dirs scanned for `bin/` and `obj/` (`.NET` build outputs) |
-| `extra_cleanup` | `JANITOR_EXTRA_CLEANUP_DIRS` — colon-separated dirs to remove entirely |
-| `safety_integrity` | `JANITOR_SAFETY_FLOOR_DIRS` — colon-separated dirs whose inode and total byte size must NOT change during the run |
-
-## Install
+## Quick install
 
 ```bash
 git clone https://github.com/agent-frontier/system-janitor.git ~/system-janitor
 ln -s ~/system-janitor/system-janitor.sh ~/.local/bin/system-janitor
 chmod +x ~/system-janitor/system-janitor.sh
-```
-
-(Optional) Copy the example config:
-
-```bash
-mkdir -p ~/.config/system-janitor
-cp ~/system-janitor/examples/config.example ~/.config/system-janitor/config
-$EDITOR ~/.config/system-janitor/config
-```
-
-## Schedule
-
-Add to your crontab (`crontab -e`):
-
-```cron
-# system-janitor — weekly disk cleanup (Sunday 03:17)
-17 3 * * 0 $HOME/.local/bin/system-janitor
-```
-
-## Manual operations
-
-```bash
-# Preview what would happen
 system-janitor --dry-run
-
-# Run now
-system-janitor
-
-# Tail human log
-tail -f ~/.local/state/janitor/janitor.log
-
-# Latest run summary (machine-readable)
-cat ~/.local/state/janitor/last-run.json | python3 -m json.tool
-
-# Total bytes freed across all runs
-jq -s '[.[] | select(.section=="run_end")] | map(.freed_kb) | add' \
-   ~/.local/state/janitor/janitor.jsonl
-
-# Any integrity violations ever?
-grep '"violated' ~/.local/state/janitor/janitor.jsonl
-
-# Recent syslog
-journalctl -t system-janitor --since '30 days ago'
 ```
 
-## Configuration reference
+That last command previews a real run without touching anything. For cron
+scheduling, optional config, and verification, see
+[docs/install.md](docs/install.md).
 
-Loaded from (in order of precedence):
+## Sibling tool: system-updater
 
-1. `--config <path>` command-line flag
-2. `$XDG_CONFIG_HOME/system-janitor/config` (default: `~/.config/system-janitor/config`)
-3. Environment variables (`JANITOR_*`)
-4. Built-in defaults
+This repo also ships [`system-updater.sh`](system-updater.sh) — an
+apt-update sibling sharing the same agent contract (dry-run-by-default,
+JSONL audit trail, `--report --json` / `--health --json` machine modes,
+capability discovery). v0 is apt-only and dry-runs by default;
+`--apply` requires root. See
+[docs/updater-install.md](docs/updater-install.md).
 
-The config file is sourced as bash, so you can use shell expansions
-(`$HOME`, etc.) and comments.
+## Where to go next
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `JANITOR_WORKSPACE_DIRS` | (unset) | Colon-separated dirs to scan for `bin/`/`obj/` |
-| `JANITOR_EXTRA_CLEANUP_DIRS` | (unset) | Colon-separated dirs to remove entirely |
-| `JANITOR_SAFETY_FLOOR_DIRS` | (unset) | Colon-separated dirs whose inode+size must not change |
-| `JANITOR_DOCKER_PRUNE` | `yes` | Run `docker system prune` |
-| `JANITOR_DOCKER_VOLUMES` | `yes` | Pass `--volumes` to docker prune |
-| `JANITOR_GO_CLEAN` | `yes` | Run `go clean -cache -testcache` |
-| `JANITOR_TMP_GOBUILD_ORPHANS` | `yes` | Remove `/tmp/go-build*` and `/tmp/gopath` |
-| `JANITOR_NUGET_CLEAN` | `yes` | Clear NuGet http-cache and temp |
-| `JANITOR_LOG_DIR` | `$XDG_STATE_HOME/janitor` | Where logs live |
+- **[docs/](docs/README.md)** — full documentation index, split by audience.
+- **Humans** start at [docs/install.md](docs/install.md) →
+  [docs/configuration.md](docs/configuration.md) →
+  [docs/usage.md](docs/usage.md).
+- **Autonomous agents** start at [docs/agents/README.md](docs/agents/README.md)
+  for machine-mode specs, exit codes, schemas, and recovery workflows.
+- **Shared reference**: [docs/audit-trail.md](docs/audit-trail.md) documents
+  the JSONL event shape, status enum, and `last-run.json` schema that both
+  tracks build on.
 
-See [`examples/config.example`](examples/config.example) for a fully
-commented sample.
+## Project files
 
-## Audit trail
+- [CHANGELOG.md](CHANGELOG.md) — per-release record of agent-visible changes
+  (flags, JSON fields, capabilities, exit codes).
+- [schemas/](schemas/) — formal Draft 2020-12 JSON Schemas for `--report --json`
+  and `--health --json`.
+- [examples/config.example](examples/config.example) — fully-commented sample
+  config.
+- [LICENSE](LICENSE) — Apache 2.0.
 
-Every run produces:
+## Development
 
-| File | Format | Purpose |
-|---|---|---|
-| `~/.local/state/janitor/janitor.log` | text | Human-readable narrative |
-| `~/.local/state/janitor/janitor.jsonl` | JSONL | One event per section, one event for run_start / run_end / safety_integrity |
-| `~/.local/state/janitor/last-run.json` | JSON | Latest run summary (atomic-overwrite) |
+```bash
+bash -n system-janitor.sh        # syntax check
+shellcheck system-janitor.sh     # static analysis
+./tests/smoke.sh                 # dry-run + audit-trail invariants
+```
 
-JSONL fields per event: `run_id`, `ts`, `host`, `user`, `section`,
-`status`, `freed_kb`, `items`, `note`.
-
-Status values: `ok`, `warn`, `dry_run`, `violated_missing`,
-`violated_inode_changed`.
-
-Logs rotate at 5 MB with 8 backups kept.
-
-## Safety guarantees
-
-- **Single-instance lock** via `flock` — overlapping cron runs exit 1
-- **Safety-floor integrity check** — any directory listed in
-  `JANITOR_SAFETY_FLOOR_DIRS` has its inode and total byte size
-  compared before and after the run. Any inode change or disappearance
-  causes the run to exit 2 and log `user.err` to syslog.
-- **Atomic `last-run.json`** — write-then-rename, monitoring tools
-  never see partial state
-- **`--dry-run`** mode — log what would happen without modifying anything
-
-## Exit codes
-
-| Code | Meaning |
-|---:|---|
-| 0 | success |
-| 1 | another instance running (lock held) |
-| 2 | integrity violation (a configured safety-floor dir was disturbed) |
-| 3 | precondition failed (e.g., `$HOME` unset, config syntax error) |
+CI (`.github/workflows/ci.yml`) runs all three on every push and PR. The
+smoke suite enforces capability completeness — every string in
+`--version --json`'s `capabilities[]` has an end-to-end probe. See
+[.github/copilot-instructions.md](.github/copilot-instructions.md) for the
+contributor contract.
 
 ## License
 

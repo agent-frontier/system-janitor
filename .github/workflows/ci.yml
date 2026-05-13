@@ -1,0 +1,44 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: shellcheck + syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: bash -n (syntax check)
+        run: |
+          bash -n system-janitor.sh
+          if [ -f system-updater.sh ]; then bash -n system-updater.sh; fi
+
+      - name: shellcheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          severity: warning
+          scandir: '.'
+          additional_files: |
+            system-janitor.sh
+            system-updater.sh
+
+  smoke:
+    name: dry-run smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run janitor smoke test
+        run: ./tests/smoke.sh
+
+      - name: Run updater smoke test
+        if: hashFiles('system-updater.sh') != ''
+        run: ./tests/updater-smoke.sh

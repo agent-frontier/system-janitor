@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/agent-frontier/system-janitor/schemas/updater-health.schema.json",
+  "title": "system-updater --health --json output",
+  "description": "Schema for the single JSON object emitted by `system-updater.sh --health --json`. This is a frozen public contract consumed by autonomous agents. Check names are frozen; adding new checks is allowed, renaming/removing is a breaking change. additionalProperties is true for forward-compat.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["status", "exit_code", "generated_at", "log_dir", "checks"],
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["healthy", "degraded", "unknown"]
+    },
+    "exit_code": {
+      "type": "integer",
+      "enum": [0, 4, 5]
+    },
+    "generated_at": { "type": "string" },
+    "log_dir": { "type": "string" },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["name", "ok", "detail"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "log_dir_exists",
+              "jsonl_present",
+              "jsonl_parses",
+              "last_run_parses",
+              "last_run_packages",
+              "dpkg_unbroken",
+              "reboot_not_required"
+            ]
+          },
+          "ok": { "type": "boolean" },
+          "detail": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/agent-frontier/system-janitor/schemas/updater-report.schema.json",
+  "title": "system-updater --report --json output",
+  "description": "Schema for the single JSON object emitted by `system-updater.sh --report --json`. This is a frozen public contract consumed by autonomous agents. additionalProperties is true so new fields can land without breaking old validations; renaming or removing the documented fields is a breaking change.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "log_dir",
+    "jsonl_path",
+    "generated_at",
+    "total_runs",
+    "real_runs",
+    "dry_runs",
+    "total_packages_upgraded",
+    "total_packages_failed",
+    "total_packages_held",
+    "date_range",
+    "per_package",
+    "most_recent_run",
+    "idle_streaks",
+    "data_quality"
+  ],
+  "properties": {
+    "log_dir": {
+      "type": "string"
+    },
+    "jsonl_path": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string"
+    },
+    "total_runs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "real_runs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "dry_runs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "total_packages_upgraded": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "total_packages_failed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "total_packages_held": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "date_range": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "first": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "last": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "per_package": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "name",
+          "runs"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "runs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "upgrades": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "fails": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "held": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "last_status": {
+            "type": "string"
+          },
+          "last_seen": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "most_recent_run": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "required": [
+            "run_id",
+            "finished",
+            "dry_run",
+            "apply",
+            "status",
+            "totals",
+            "packages"
+          ],
+          "properties": {
+            "run_id": {
+              "type": "string"
+            },
+            "started_at": {
+              "type": "string"
+            },
+            "ended_at": {
+              "type": "string"
+            },
+            "finished": {
+              "type": "string"
+            },
+            "host": {
+              "type": "string"
+            },
+            "user": {
+              "type": "string"
+            },
+            "backend": {
+              "type": "string"
+            },
+            "dry_run": {
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
+            },
+            "apply": {
+              "type": "integer",
+              "enum": [
+                0,
+                1
+              ]
+            },
+            "status": {
+              "type": "string"
+            },
+            "integrity": {
+              "type": "string"
+            },
+            "reboot_required": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1,
+              "description": "0 or 1; 1 indicates /var/run/reboot-required exists after the run"
+            },
+            "totals": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "upgraded": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "failed": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "held": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "excluded": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "filtered_non_security": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "packages": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": [
+                  "name",
+                  "status"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "from_version": {
+                    "type": "string"
+                  },
+                  "to_version": {
+                    "type": "string"
+                  },
+                  "security": {
+                    "type": "string"
+                  },
+                  "source_repo": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "idle_streaks": {
+      "type": "array"
+    },
+    "data_quality": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "invalid_lines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "examples": {
+          "type": "array"
+        }
+      }
+    }
+  }
+}

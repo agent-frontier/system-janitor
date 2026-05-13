@@ -1,0 +1,61 @@
+# system-updater configuration
+#
+# Format:        key=value (shell-sourced; bash semantics, comments with #).
+# Default path:  $XDG_CONFIG_HOME/system-updater/config
+#                (typically ~/.config/system-updater/config). Override via
+#                --config <path> or the UPDATER_CONFIG_FILE environment
+#                variable.
+#
+# All knobs here are UPDATER_* environment variables. The script applies
+# the defaults shown below if a variable is unset.
+#
+# Defaults are SAFE: dry-run preview, apt backend (auto-detected), no
+# holds, no maintenance window, no snapshot requirement, no auto-reboot.
+# You only need to set values to opt into stricter behavior.
+
+# ── Log location ──────────────────────────────────────────────────────
+# Default: $XDG_STATE_HOME/system-updater (~/.local/state/system-updater).
+# Holds updater.jsonl, updater-last-run.json, .health-baseline, updater.lock.
+#
+# UPDATER_LOG_DIR="$HOME/.local/state/system-updater"
+
+# ── Backend ───────────────────────────────────────────────────────────
+# One of: apt, stub, auto (default). 'auto' picks apt when apt-get is on
+# $PATH, otherwise stub. The stub backend is a no-op used by tests and
+# non-apt hosts.
+#
+# UPDATER_BACKEND=auto
+
+# ── Holds ─────────────────────────────────────────────────────────────
+# Space-separated glob list of package names to NEVER upgrade. Matched
+# packages are reported with status=held in the audit trail. Holds win
+# over --only.
+#
+# UPDATER_HOLD_PACKAGES="linux-image-* nvidia-* docker-ce"
+
+# ── Security-only filtering ───────────────────────────────────────────
+# When yes, restricts upgrades to security-flagged packages. Filtered-out
+# packages are reported with status=filtered_non_security.
+#
+# UPDATER_SECURITY_ONLY=no
+
+# ── Maintenance window ────────────────────────────────────────────────
+# HH:MM-HH:MM (24-hour, local time). When set, --apply outside the window
+# exits 6 with status=out_of_window. --dry-run ignores the window. Use
+# --force to override.
+#
+# UPDATER_MAINTENANCE_WINDOW=02:00-04:00
+
+# ── Snapshot requirement (v0: stubbed) ────────────────────────────────
+# When yes, --apply refuses to run unless a snapshot exists. v0 ships a
+# stub that always reports missing; setting this to yes will exit 2
+# (status=snapshot_missing) until real snapshot integration lands.
+#
+# UPDATER_REQUIRE_SNAPSHOT=no
+
+# ── Reboot policy (v0: action stubbed) ────────────────────────────────
+# One of: never (default), if-required. v0 records the post-update reboot
+# signal as status=reboot_required but does NOT auto-reboot regardless
+# of policy. The action ships in v0.2.
+#
+# UPDATER_REBOOT_POLICY=never
