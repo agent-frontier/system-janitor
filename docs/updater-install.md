@@ -22,9 +22,9 @@ For the cleanup tool, see [install.md](./install.md).
 The same checkout serves both tools.
 
 ```bash
-git clone https://github.com/agent-frontier/system-janitor.git ~/system-janitor
-ln -s ~/system-janitor/system-updater.sh ~/.local/bin/system-updater
-chmod +x ~/system-janitor/system-updater.sh
+git clone https://github.com/agent-frontier/agent-toolkit.git ~/agent-toolkit
+ln -s ~/agent-toolkit/system-updater.sh ~/.local/bin/system-updater
+chmod +x ~/agent-toolkit/system-updater.sh
 ```
 
 Make sure `~/.local/bin` is on your `$PATH`. Verify:
@@ -44,7 +44,7 @@ reference.
 
 ```bash
 mkdir -p ~/.config/system-updater
-cp ~/system-janitor/examples/updater.config.example ~/.config/system-updater/config
+cp ~/agent-toolkit/examples/updater.config.example ~/.config/system-updater/config
 $EDITOR ~/.config/system-updater/config
 ```
 

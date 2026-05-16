@@ -1,50 +1,44 @@
-# system-janitor
+# agent-toolkit
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-Disk-cleanup sweep with audit-grade logging for long-lived development hosts.
+Agent-first ops tools for autonomous LLM agents operating Linux servers
+without supervision. Every tool shares one contract: capability discovery
+via `--version --json`, structured machine-mode output (`--report --json`,
+`--health --json`), append-only JSONL audit trail, atomic state writes,
+`flock` single-instance, `--dry-run` default on destructive paths, frozen
+exit codes. Humans run them from cron; agents drive them as tools.
 
-Build caches and container layers grow without bound. Most cleanup scripts are
-either too aggressive (wipe things you needed) or too narrow (only clean one
-toolchain). `system-janitor` runs the universally-safe operations by default
-(Docker, Go, NuGet http/temp caches, `/tmp/go-build*` orphans) and gates
-everything that touches user paths behind explicit configuration. It is
-designed to run unattended via cron on hosts where Docker, Go, .NET, and
-other toolchains accumulate gigabytes of regenerable build artifacts week
-over week.
+The toolkit is deliberately Bash + Linux-specific. Agents can `cat` the
+source to understand intent during incident response — no opaque binaries,
+no build step, no runtime dependencies beyond what every server already
+ships (bash 4+, coreutils, `flock`, `python3` for JSON output).
 
-Safety is the headline feature: a `flock` single-instance lock, an optional
-inode+byte safety-floor integrity check over directories you nominate,
-atomic-rename writes to `last-run.json`, and a first-class `--dry-run` mode.
-See [docs/safety.md](docs/safety.md) for the full list of guarantees.
+## Tools shipped today
 
-The primary consumer is an autonomous LLM agent. Every machine-mode output
-is stable JSON with a documented schema and a frozen exit-code contract;
-`--version --json` exposes a `capabilities[]` feature-detection surface so
-agents can negotiate features without parsing `--help`. Humans run it from
-cron; agents drive it as a tool.
+| Tool | Purpose | State |
+|---|---|---|
+| [`system-janitor.sh`](system-janitor.sh) | Disk/cache/log cleanup with safety floor and audit-grade logging. Universally-safe ops by default (Docker, Go, NuGet, `/tmp/go-build*`); destructive paths gated behind config. | v0.1.0 |
+| [`system-updater.sh`](system-updater.sh) | apt package update sweep with holds, security-only mode, and maintenance windows. `--apply` requires root and is explicit (not the default). | v0.1.0 |
+
+Candidates under consideration live in
+[`docs/agents/toolkit-roadmap.md`](docs/agents/toolkit-roadmap.md) —
+menu, not commitment.
 
 ## Quick install
 
 ```bash
-git clone https://github.com/agent-frontier/system-janitor.git ~/system-janitor
-ln -s ~/system-janitor/system-janitor.sh ~/.local/bin/system-janitor
-chmod +x ~/system-janitor/system-janitor.sh
+git clone https://github.com/agent-frontier/agent-toolkit.git ~/agent-toolkit
+ln -s ~/agent-toolkit/system-janitor.sh ~/.local/bin/system-janitor
+ln -s ~/agent-toolkit/system-updater.sh ~/.local/bin/system-updater
+chmod +x ~/agent-toolkit/system-janitor.sh ~/agent-toolkit/system-updater.sh
 system-janitor --dry-run
+system-updater --dry-run
 ```
 
-That last command previews a real run without touching anything. For cron
-scheduling, optional config, and verification, see
-[docs/install.md](docs/install.md).
-
-## Sibling tool: system-updater
-
-This repo also ships [`system-updater.sh`](system-updater.sh) — an
-apt-update sibling sharing the same agent contract (dry-run-by-default,
-JSONL audit trail, `--report --json` / `--health --json` machine modes,
-capability discovery). v0 is apt-only and dry-runs by default;
-`--apply` requires root. See
-[docs/updater-install.md](docs/updater-install.md).
+Per-tool install / config / scheduling: see
+[docs/install.md](docs/install.md) (janitor) and
+[docs/updater-install.md](docs/updater-install.md) (updater).
 
 ## Where to go next
 
@@ -53,32 +47,33 @@ capability discovery). v0 is apt-only and dry-runs by default;
   [docs/configuration.md](docs/configuration.md) →
   [docs/usage.md](docs/usage.md).
 - **Autonomous agents** start at [docs/agents/README.md](docs/agents/README.md)
-  for machine-mode specs, exit codes, schemas, and recovery workflows.
+  for the shared contract, machine-mode specs, exit codes, schemas, and
+  recovery workflows.
 - **Shared reference**: [docs/audit-trail.md](docs/audit-trail.md) documents
-  the JSONL event shape, status enum, and `last-run.json` schema that both
-  tracks build on.
+  the JSONL event shape, status enum, and `last-run.json` schema that all
+  tools build on.
 
 ## Project files
 
 - [CHANGELOG.md](CHANGELOG.md) — per-release record of agent-visible changes
   (flags, JSON fields, capabilities, exit codes).
-- [schemas/](schemas/) — formal Draft 2020-12 JSON Schemas for `--report --json`
-  and `--health --json`.
-- [examples/config.example](examples/config.example) — fully-commented sample
-  config.
+- [schemas/](schemas/) — formal Draft 2020-12 JSON Schemas for each tool's
+  `--report --json` and `--health --json`.
+- [examples/](examples/) — fully-commented sample configs for each tool.
 - [LICENSE](LICENSE) — Apache 2.0.
 
 ## Development
 
 ```bash
-bash -n system-janitor.sh        # syntax check
-shellcheck system-janitor.sh     # static analysis
-./tests/smoke.sh                 # dry-run + audit-trail invariants
+bash -n system-janitor.sh system-updater.sh   # syntax check
+shellcheck system-janitor.sh system-updater.sh  # static analysis
+./tests/smoke.sh                              # janitor: 83 assertions
+./tests/updater-smoke.sh                      # updater: 42 assertions
 ```
 
-CI (`.github/workflows/ci.yml`) runs all three on every push and PR. The
-smoke suite enforces capability completeness — every string in
-`--version --json`'s `capabilities[]` has an end-to-end probe. See
+CI (`.github/workflows/ci.yml`) runs lint + smoke for both tools on every
+push and PR. Smoke suites enforce capability completeness — every string
+in `--version --json`'s `capabilities[]` has an end-to-end probe. See
 [.github/copilot-instructions.md](.github/copilot-instructions.md) for the
 contributor contract.
 

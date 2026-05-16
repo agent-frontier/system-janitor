@@ -1,22 +1,38 @@
-# Copilot instructions for system-janitor
+# Copilot instructions for agent-toolkit
 
-> First-encounter brief for agents working *on* this script. For deep
-> references when consuming the script's machine-mode output, see
-> [`docs/agents/`](../docs/agents/README.md):
+> First-encounter brief for agents working *on* this project. The toolkit
+> currently ships two scripts; this document captures the conventions
+> they share. For deep references when *consuming* a tool's machine-mode
+> output, see [`docs/agents/`](../docs/agents/README.md):
 > [`machine-modes.md`](../docs/agents/machine-modes.md) (invocation +
 > stdout shape), [`contracts.md`](../docs/agents/contracts.md) (exit
 > codes, status enum, capability contract, unit canon, aliases),
 > [`recovery.md`](../docs/agents/recovery.md)
 > (`--health-acknowledge` workflow), and
 > [`schemas.md`](../docs/agents/schemas.md) (JSON Schema validation).
+> Updater-specific deltas live in
+> [`docs/agents/updater-contracts.md`](../docs/agents/updater-contracts.md).
 
-`system-janitor` is a single-file Bash 4+ disk-cleanup script
-(`system-janitor.sh`, ~1700 lines) plus a sample config
-(`examples/config.example`), JSON schemas under `schemas/`, and a README.
-There is no build system or package manager; `tests/smoke.sh` is the
-canonical test harness. The script runs unattended via cron, so changes
-must preserve cron-safety, audit-log shape, capability contract, and
-exit-code contract.
+The `agent-toolkit` project (repo `agent-frontier/agent-toolkit`,
+formerly `system-janitor`) hosts two single-file Bash tools sharing
+one agent contract:
+
+- `system-janitor.sh` (~1700 lines) — disk/cache/log cleanup
+- `system-updater.sh` (~1400 lines) — apt update sweep
+
+Plus shared infrastructure: `examples/` (per-tool sample configs),
+`schemas/` (Draft 2020-12 JSON Schemas), `tests/` (per-tool smoke
+suites), `docs/` (human + agent tracks). There is no build system or
+package manager; `tests/smoke.sh` and `tests/updater-smoke.sh` are the
+canonical test harnesses. The scripts run unattended via cron, so
+changes must preserve cron-safety, audit-log shape, capability
+contract, and exit-code contract.
+
+The rest of this document is the design brief for `system-janitor.sh`
+specifically — its sections, safety floor, capability list, and exit
+codes. Treat it as the reference instance of the shared contract;
+`system-updater.sh` follows the same patterns with updater-specific
+extensions documented in [`docs/agents/updater-contracts.md`](../docs/agents/updater-contracts.md).
 
 ## Design north star
 

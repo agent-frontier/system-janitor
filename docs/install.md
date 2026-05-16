@@ -15,9 +15,9 @@ Docker-only host without configuration.
 ## Install
 
 ```bash
-git clone https://github.com/agent-frontier/system-janitor.git ~/system-janitor
-ln -s ~/system-janitor/system-janitor.sh ~/.local/bin/system-janitor
-chmod +x ~/system-janitor/system-janitor.sh
+git clone https://github.com/agent-frontier/agent-toolkit.git ~/agent-toolkit
+ln -s ~/agent-toolkit/system-janitor.sh ~/.local/bin/system-janitor
+chmod +x ~/agent-toolkit/system-janitor.sh
 ```
 
 Make sure `~/.local/bin` is on your `$PATH`. Verify:
@@ -37,7 +37,7 @@ full reference.
 
 ```bash
 mkdir -p ~/.config/system-janitor
-cp ~/system-janitor/examples/config.example ~/.config/system-janitor/config
+cp ~/agent-toolkit/examples/config.example ~/.config/system-janitor/config
 $EDITOR ~/.config/system-janitor/config
 ```
 

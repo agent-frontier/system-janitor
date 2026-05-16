@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/agent-frontier/system-janitor/schemas/health.schema.json",
+  "$id": "https://github.com/agent-frontier/agent-toolkit/schemas/health.schema.json",
   "title": "system-janitor --health --json output",
   "description": "Schema for the single JSON object emitted by `system-janitor.sh --health --json`. This is a frozen public contract consumed by autonomous agents. Check names are frozen; adding new checks is allowed, renaming/removing is a breaking change. additionalProperties is true for forward-compat.",
   "type": "object",

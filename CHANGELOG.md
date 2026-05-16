@@ -1,6 +1,7 @@
 # Changelog
 
-All notable changes to `system-janitor` are documented in this file.
+All notable changes to the `agent-toolkit` project (formerly
+`system-janitor`) are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -10,6 +11,25 @@ emphasizes machine-readable surface area (flags, JSON fields, schemas, exit
 codes, status enums, capability strings) over human-facing UX.
 
 ## [Unreleased]
+
+### Changed
+
+- **Repository renamed `system-janitor` → `agent-toolkit`** to reflect
+  that the repo now hosts multiple agent-first ops tools sharing one
+  contract, not a single cleanup script. The individual tool names
+  (`system-janitor.sh`, `system-updater.sh`), their syslog tags, config
+  paths (`$XDG_CONFIG_HOME/system-janitor/`, `~/.local/state/janitor/`,
+  etc.), `JANITOR_*`/`UPDATER_*` env vars, and `--version --json`
+  `name` field are unchanged. Only project identity moves:
+  - GitHub remote: `agent-frontier/system-janitor` →
+    `agent-frontier/agent-toolkit` (GitHub redirects the old URL).
+  - Clone-target convention: `~/system-janitor` → `~/agent-toolkit`.
+  - JSON Schema `$id` URLs updated.
+  - README reframed as project front door (lists both tools as peers,
+    points to [`docs/agents/toolkit-roadmap.md`](docs/agents/toolkit-roadmap.md)
+    for the candidate menu).
+  - `.github/copilot-instructions.md` reframed as project-level brief
+    with the janitor-script-specific design notes as the depth section.
 
 ### Added
 

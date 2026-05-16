@@ -1,4 +1,4 @@
-# system-janitor documentation
+# agent-toolkit documentation
 
 This repo hosts two sibling tools sharing the same agent contract:
 `system-janitor` (disk cleanup) and `system-updater` (apt updates).

@@ -1,8 +1,8 @@
 # Agent track
 
-This is the agent-facing track. The primary consumer of system-janitor is
-autonomous LLM agents. Pages in this directory are contract-shaped:
-regex-scrapeable, tabular, terse.
+This is the agent-facing track. The primary consumer of the agent-toolkit
+project is autonomous LLM agents. Pages in this directory are
+contract-shaped: regex-scrapeable, tabular, terse.
 
 If you are a human looking for prose and onboarding, start at
 [`../../README.md`](../../README.md) and [`../README.md`](../README.md).

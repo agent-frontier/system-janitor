@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/agent-frontier/system-janitor/schemas/report.schema.json",
+  "$id": "https://github.com/agent-frontier/agent-toolkit/schemas/report.schema.json",
   "title": "system-janitor --report --json output",
   "description": "Schema for the single JSON object emitted by `system-janitor.sh --report --json`. This is a frozen public contract consumed by autonomous agents. additionalProperties is true so new fields can land without breaking old validations; renaming or removing the documented fields is a breaking change.",
   "type": "object",

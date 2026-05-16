@@ -319,7 +319,7 @@ EXIT CODES:
       system-janitor has never run on this host). Not a failure;
       just no signal yet.
 
-See https://github.com/agent-frontier/system-janitor for full docs.
+See https://github.com/agent-frontier/agent-toolkit for full docs.
 USAGE
   exit 0
 fi

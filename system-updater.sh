@@ -234,7 +234,7 @@ LOGS:
   $UPDATER_LOG_DIR/.health-baseline         byte offset for --health
   Default UPDATER_LOG_DIR: $XDG_STATE_HOME/system-updater.
 
-See https://github.com/agent-frontier/system-janitor for full docs.
+See https://github.com/agent-frontier/agent-toolkit for full docs.
 USAGE
   exit 0
 fi
