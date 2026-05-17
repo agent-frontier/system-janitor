@@ -42,3 +42,7 @@ jobs:
       - name: Run updater smoke test
         if: hashFiles('system-updater.sh') != ''
         run: ./tests/updater-smoke.sh
+
+      - name: Run capabilities registry check
+        if: hashFiles('docs/agents/capabilities.md') != ''
+        run: ./tests/capabilities-check.sh

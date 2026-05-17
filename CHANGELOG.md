@@ -12,7 +12,35 @@ codes, status enums, capability strings) over human-facing UX.
 
 ## [Unreleased]
 
+### Added
+
+- `docs/agents/capabilities.md` — project-wide capability registry.
+  Single source of truth for every `--version --json` `capabilities[]`
+  string across tools, with a machine-readable JSON block, prose
+  tables for shared vs per-tool semantics, and the four-part
+  add-a-capability workflow. Confirms no semantic collisions exist
+  across the 8 shared capability strings (`health`,
+  `health-acknowledge`, `health-json`, `only`, `report`,
+  `report-json`, `version`, `version-json`).
+- `tests/capabilities-check.sh` — registry-consistency smoke. Asserts
+  each tool's runtime `capabilities[]` matches its registry array
+  exactly, and that every shared capability has a documented row in
+  the registry's "Shared capabilities" table. Wired into CI.
+
+### Removed
+
+- `docs/agents/toolkit-roadmap.md` — stripped 15 per-candidate
+  `Language:` stanzas and the "Language recommendation: Bash vs Go"
+  matrix. The project committed to Bash + Linux in the Decision log
+  at the top of that file; the deliberation is no longer load-bearing.
+
 ### Changed
+
+- `docs/agents/contracts.md` — capability contract section rewritten
+  to reference the registry. The three-part change workflow is now
+  four parts (registry update is mandatory). New cross-tool rule:
+  capability strings shared across tools MUST have identical
+  semantics, enforced by `tests/capabilities-check.sh`.
 
 - **Repository renamed `system-janitor` → `agent-toolkit`** to reflect
   that the repo now hosts multiple agent-first ops tools sharing one

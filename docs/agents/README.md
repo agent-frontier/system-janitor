@@ -15,7 +15,8 @@ If you are a human looking for prose and onboarding, start at
 | [`contracts.md`](./contracts.md) | Frozen contracts: exit codes, `status` enum, capability discovery rules, the bytes/kb unit canon, and `SECTION_ALIASES` / `OBSOLETE_SECTIONS`. |
 | [`recovery.md`](./recovery.md) | The `--health-acknowledge` recovery workflow: how to move from `degraded` back to `healthy` without rewriting an append-only audit log. |
 | [`schemas.md`](./schemas.md) | JSON Schema files in [`schemas/`](../../schemas/), how to validate, forward-compat policy. |
-| [`toolkit-roadmap.md`](./toolkit-roadmap.md) | Candidate sibling tools that fit the ethos — selection criteria, 15-tool catalog, Bash-vs-Go deliberation, lean-wedge proposal (`cert-watch.sh`). Menu, not commitment. |
+| [`capabilities.md`](./capabilities.md) | Single source of truth for every `--version --json` `capabilities[]` string across tools. Includes the JSON registry, semantics tables for shared/per-tool capabilities, and the "no-collision" guarantee enforced by [`tests/capabilities-check.sh`](../../tests/capabilities-check.sh). |
+| [`toolkit-roadmap.md`](./toolkit-roadmap.md) | Candidate sibling tools that fit the ethos — selection criteria, 15-tool catalog, lean-wedge proposal (`cert-watch.sh`). Menu, not commitment. |
 
 ## Cross-references
 

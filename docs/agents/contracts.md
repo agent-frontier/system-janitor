@@ -59,26 +59,46 @@ cover it.
 ## Capability contract
 
 `capabilities[]` in `--version --json` is the source of truth for
-agent feature detection. **Each tool advertises its own
-`capabilities[]` list** — janitor's is in
-[`machine-modes.md`](./machine-modes.md#--version) and updater's is in
-[`updater-machine-modes.md`](./updater-machine-modes.md#--version). The
-two lists do not overlap; agents must query the tool they intend to drive.
+agent feature detection at runtime. The **project-wide registry**
+lives at [`capabilities.md`](./capabilities.md): one JSON block
+listing every capability string each tool advertises, plus prose
+tables for shared and per-tool semantics. Agents that operate
+multiple tools should consult the registry to learn which
+capability strings carry identical semantics across tools (eight at
+the moment: `health`, `health-acknowledge`, `health-json`, `only`,
+`report`, `report-json`, `version`, `version-json`) and which are
+tool-specific.
+
+Per-tool entry points: janitor's array is also documented in
+[`machine-modes.md`](./machine-modes.md#--version), updater's in
+[`updater-machine-modes.md`](./updater-machine-modes.md#--version).
+Those pages and the registry must agree.
 
 Rules:
 
 1. **Alphabetically sorted.** `do_version()` calls `sorted()` at emit
    time, locked in by the smoke `capability completeness` stage.
 2. **Append-only.** Removing a capability string is a breaking change.
-3. **Three-part change.** Adding a new agent-visible feature is:
+3. **Four-part change.** Adding a new agent-visible feature is:
    (1) implement it, (2) append its capability string in `do_version()`,
-   (3) add an end-to-end probe in `tests/smoke.sh`'s
-   `─── capability completeness ───` stage. The smoke stage iterates a
-   hard-coded `expected` list — keep that list in sync.
-4. **Smoke enforces both directions of the contract.** Claimed
-   capabilities must work (the probe asserts it); unknown capability
-   strings (claimed but no probe) fail the suite. The reverse direction
+   (3) add the string to that tool's array in
+   [`capabilities.md`](./capabilities.md) (alphabetical slot), (4) add
+   an end-to-end probe in the tool's smoke
+   `─── capability completeness ───` stage. The smoke stage iterates
+   a hard-coded `expected` list — keep that list in sync.
+4. **Smoke enforces both directions per tool.** Claimed capabilities
+   must work (the probe asserts it); unknown capability strings
+   (claimed but no probe) fail the suite. The reverse direction
    (feature added without capability) is enforced by code review.
+5. **Cross-tool registry consistency** is enforced by
+   [`tests/capabilities-check.sh`](../../tests/capabilities-check.sh).
+   It fails if (a) any tool's runtime `capabilities[]` differs from
+   its registry array, or (b) a capability string appears in two
+   tools' arrays without a corresponding row in the "Shared
+   capabilities" table of the registry.
+6. **No semantic collisions.** A capability string that appears in
+   two tools' arrays MUST mean exactly the same thing in both. If
+   semantics would diverge, pick a new string instead.
 
 ## Unit canon
 

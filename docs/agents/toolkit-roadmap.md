@@ -42,11 +42,6 @@ machine-mode `--report`/`--health`/`--health-acknowledge`, schemas under
 >
 > - Every candidate below is built in **Bash**, Linux-only, mirroring
 >   the `system-janitor.sh` / `system-updater.sh` conventions.
-> - The `language fit` line in each stanza records the original
->   deliberation but does not override this decision.
-> - The §"Language recommendation: Bash vs Go" matrix is preserved
->   as the deliberation that produced this reversal. Read it as
->   history, not direction.
 > - §"Lean-wedge proposal" has been rewritten in place.
 >
 > Revisit if and only if we hit a real wall on Linux. We will not.
@@ -83,9 +78,8 @@ grandfathered.
 
 ## Candidate catalog
 
-Stanzas are compact on purpose. Risk profile, OS scope, language fit,
-agent value, prior art, and the questions that would actually bite
-during design.
+Stanzas are compact on purpose. Risk profile, OS scope, agent value,
+prior art, and the questions that would actually bite during design.
 
 ---
 
@@ -97,8 +91,6 @@ secrets dirs), parses x509, reports days-to-expiry per cert.
 
 - Risk: **read-only**.
 - OS: **cross-os-including-windows** (x509 is x509).
-- Language: **go**. `crypto/x509` is in the standard library; `openssl
-  x509 -enddate` in Bash is brittle and pre-1.1 vs 3.x output drifts.
 - Agent value: **high**. Cert expiry is the canonical "silent
   outage at 3am" failure that pre-deploy probes catch cheaply.
 - Prior art: `certbot certificates`, `cert-manager`, `ssl-cert-check`
@@ -116,8 +108,6 @@ SMART attributes + filesystem usage probe. Combines `smartctl -A
 - Risk: **read-only**.
 - OS: **cross-os-including-windows**. SMART is universal; access path
   differs (`/dev/sd*` vs `\\.\PhysicalDrive*`).
-- Language: **go**. Cross-OS device enumeration is painful in Bash.
-  Wrap `smartctl` rather than reimplement the protocol.
 - Agent value: **high**. Reallocated-sector growth and 90%-full
   mounts are the two cheapest pre-failure signals on a long-lived host.
 - Prior art: `smartmontools`, `node_exporter`'s smartmon collector,
@@ -134,9 +124,6 @@ stratum, last-sync age, and whether the host is actively synchronizing.
 
 - Risk: **read-only**.
 - OS: **cross-os-including-windows**.
-- Language: **go**. SNTP query is ~50 lines of `net.UDPConn`; Bash
-  shelling out to `chronyc`/`timedatectl`/`w32tm` and reconciling
-  three output formats is a worse implementation.
 - Agent value: **high**. Clock skew silently corrupts TLS handshakes,
   TOTP, log correlation, and Kerberos. Agents need a binary signal.
 - Prior art: `chronyc tracking`, `timedatectl status`, `w32tm /query`,
@@ -153,8 +140,6 @@ Cross-init unit-status probe. systemd on Linux, launchd on macOS,
 
 - Risk: **read-only**.
 - OS: **cross-os-including-windows**.
-- Language: **go**. Three completely different IPC mechanisms;
-  Bash gives nothing useful on macOS or Windows.
 - Agent value: **medium**. Most agents care about a small named set
   of services, not all of them. Value is the cross-OS uniform output.
 - Prior art: `systemctl --failed`, `launchctl list`, PowerShell
@@ -170,8 +155,6 @@ resolver sanity (resolve a known name, time it, compare against
 
 - Risk: **read-only**.
 - OS: **cross-os-including-windows**.
-- Language: **go**. `net.Listen`/`net.Dial` and `/proc/net/tcp` style
-  parsers are fine, but Windows wants iphlpapi; Bash can't reach there.
 - Agent value: **medium**. Useful as a "what is this box exposing"
   sanity check before/after config changes.
 - Prior art: `ss -tlnp`, `netstat`, `lsof -i`, `Get-NetTCPConnection`.
@@ -186,9 +169,6 @@ diffs against a small persisted history.
 
 - Risk: **read-only**.
 - OS: **cross-os-including-windows** in principle; v0 probably **unix**.
-- Language: **go**. Persisted history wants real serialization and
-  atomic writes; Bash with `ps` + awk is a regression from janitor's
-  state-file discipline.
 - Agent value: **medium**. Restart loops are common, hard to spot
   by eye, and trivial to detect from PID/start-time diffs.
 - Prior art: `monit`, `supervisord`, `systemd`'s own restart counters.
@@ -205,9 +185,6 @@ AIDE-lite, agent-shaped output.
 - Risk: **mutating-reversible** (the baseline is the only mutation;
   it's a single file, atomic write, trivially regenerable).
 - OS: **cross-os-including-windows**.
-- Language: **go**. Real concurrency for hashing large trees;
-  `sha256sum | sort | diff` in Bash is fine for a homedir, painful
-  for `/etc` + `/usr/local`.
 - Agent value: **medium**. Higher in security-conscious deployments.
 - Prior art: **AIDE** (well-established, GPL-2.0, Linux/BSD, text
   config + binary DB; see <https://aide.github.io/>), **Tripwire**
@@ -226,9 +203,6 @@ spike detection. Reads `journalctl`, `/var/log/auth.log`,
 
 - Risk: **read-only**.
 - OS: **linux-only** (journalctl + Linux auth-log conventions).
-- Language: **bash**. The data sources are Linux-specific text/
-  binary logs; jq + journalctl `--output=json` does the job. Go buys
-  nothing here.
 - Agent value: **medium**. Standard tripwire signal for "is this
   host under attack or misconfigured".
 - Prior art: `fail2ban` (mutating), `logwatch`, `aureport`. We are
@@ -245,9 +219,6 @@ file.
 
 - Risk: **read-only**.
 - OS: **linux-only**.
-- Language: **bash**. `nft -j list ruleset`, `iptables-save`, `ufw
-  status verbose`, `firewall-cmd --list-all-zones` are all Linux-
-  specific shell tools.
 - Agent value: **medium**. Catches "someone opened :22 to 0.0.0.0/0
   three days ago and no-one remembers why".
 - Prior art: `nft`, `iptables-save`, OpenSCAP firewall profile checks.
@@ -262,9 +233,6 @@ keys, SSH private keys.
 
 - Risk: **read-only**.
 - OS: **cross-os-including-windows**.
-- Language: **go**. We do not want to be a slower `gitleaks`. If
-  this ships, it ships as a thin agent-contract wrapper around a
-  vendored rule pack with hermetic test fixtures.
 - Agent value: **niche**. Most agents want this as part of a
   pre-deploy gate, not as a host probe. Possibly out of scope; the
   ecosystem (gitleaks, trufflehog, ripsecrets) is mature.
@@ -281,7 +249,6 @@ verifies the destination matches.
 
 - Risk: **read-only**.
 - OS: **cross-os-including-windows**.
-- Language: **go**. Cross-OS path/stat handling and parallel hash.
 - Agent value: **high** *in environments that have backups*.
   **niche** otherwise.
 - Prior art: `restic check`, `borg check`, `rsnapshot` verification.
@@ -297,9 +264,6 @@ USN/CVE feed. Reports "your kernel is N CVEs behind".
 
 - Risk: **read-only**.
 - OS: **linux-only**.
-- Language: **either**. Bash + `curl` + `jq` is sufficient for a
-  v0 against Ubuntu USN JSON or Debian Security Tracker. Go pays
-  off if we want offline-cached feeds with signature verification.
 - Agent value: **medium**. Pairs naturally with `system-updater`
   (updater says "kernel update available"; kernel-cve says "and
   here's the CVE backlog that closes").
@@ -316,9 +280,6 @@ prune with `--apply`.
 - Risk: **mutating-destructive** (prune deletes data).
 - OS: **cross-os where the engine exists** (Linux, macOS, Windows
   Docker Desktop).
-- Language: **either**. The Docker/Podman CLIs are themselves
-  cross-platform, so Bash wrapping is viable. Go gets us the
-  Docker Engine API directly without shelling out.
 - Agent value: **medium**. Overlaps with `system-janitor`'s existing
   `docker_prune` section — this would be a *deeper* sweep (named
   volumes referenced by no container, build-cache layers older than
@@ -338,7 +299,6 @@ samples across a small persisted history; greps `dmesg` /
 
 - Risk: **read-only**.
 - OS: **linux-only** (`/proc/vmstat` is the whole interface).
-- Language: **bash**. `awk` over `/proc/vmstat` and `journalctl -k
   --grep`; nothing here wants Go.
 - Agent value: **medium**. Catches the "this host is paging itself
   to death" signal before the OOM-killer takes down something
@@ -355,8 +315,6 @@ Inventory `/etc/cron.*`, `/etc/cron.d`, user crontabs,
 
 - Risk: **read-only**.
 - OS: **linux-only**.
-- Language: **bash**. Pure filesystem + `crontab -l` + `systemctl`
-  parsing; Go is overkill.
 - Agent value: **niche**. Useful in long-lived dev hosts where cron
   drift accumulates; less useful in immutable-infra environments.
 - Prior art: none with an agent contract. `cronic` is human-facing.
@@ -365,41 +323,6 @@ Inventory `/etc/cron.*`, `/etc/cron.d`, user crontabs,
   scoping v0 to systemd timers and `/etc/cron.d` only.
 
 ---
-
-## Language recommendation: Bash vs Go
-
-> **Historical:** this matrix is the deliberation that produced the
-> Decision log at the top of the file. The project chose Bash + Linux.
-> Preserved unedited so the reasoning is auditable.
-
-| Dimension | Bash | Go |
-|---|---|---|
-| Install footprint | Zero. Agent can `cat` source, edit in place. | Static binary; signed release artifact. |
-| Cross-OS reach | Linux-only in practice (macOS bash 3.2, Windows nope). | Linux, macOS, Windows from one source tree. |
-| JSON marshaling | `jq` or hand-rolled (fragile). | `encoding/json`, schema-aligned structs. |
-| Concurrency | `&` + `wait` (no shared state). | Real `goroutine`/`chan`. |
-| Audit-trail fit | Native (append `>>`, `flock`). | Native (`os.OpenFile`, `flock(2)`). |
-| Test hermeticity | Subshell + tmpdir; very natural. | Equally natural (`t.TempDir()`). |
-| Distribution | Clone the repo. | Release artifacts, checksums, signatures. |
-| Read-back by humans | Trivial. | Requires `git`, not the binary. |
-
-Decision rule:
-
-- **Bash** for tools whose data sources are Linux-deep (`apt`, `dpkg`,
-  `journalctl`, `/proc`, `/etc/cron.d`, `nft`, `iptables`).
-- **Go** for tools whose protocols are universal (x509, SMART, SNTP,
-  HTTP, filesystem hashing).
-- **Either** is a real answer — but pick once per tool, not per
-  function. A tool that's half-Bash-half-Go is two tools wearing
-  one name.
-
-Cost of mixing languages: the agent contract has to be honored
-*twice* — once in shell idioms (today, in `system-janitor.sh` /
-`system-updater.sh`) and once as a Go shared library. Net positive:
-this forces the contract to become a real spec (capability strings,
-exit codes, JSONL event shape, lock-file conventions) instead of
-"whatever janitor.sh happens to do". That spec is value the project
-needs anyway — see [Open questions](#open-questions).
 
 ## Lean-wedge proposal
 
